@@ -12,7 +12,8 @@ latest relevant files from the ignored `logs/` folder, especially `setup-*.log`,
 - Goal: local/offline-first per-speaker language track editor for multi-audio
   MKV/MP4 files
 - Current version: functional scaffold with GUI analyze/export, FFmpeg
-  metadata/remux path, generated fallback subtitles, setup scripts, and tests
+  metadata/remux path, pyannote diarization adapter, generated fallback
+  subtitles, setup scripts, and tests
 
 ## Product Intent
 
@@ -27,6 +28,7 @@ after dependencies/models are installed or cached.
 ## Important Decisions
 
 - Default setup now installs the core local ML stack.
+- Selected diarization model: `pyannote/speaker-diarization-community-1`.
 - Asteroid is not in the default ML path because it pulls `pesq`, which failed
   on Windows without Microsoft C++ Build Tools.
 - `HF_TOKEN` is optional and only for one-time downloads of gated model files.
@@ -70,21 +72,23 @@ Remove failed Asteroid partial installs:
 - `ate doctor`: checks Python, FFmpeg, PySide6, ML packages, offline mode,
   configured local folders, and Torch/CUDA.
 - `ate analyze <media> --project <file>`: probes streams and writes a project
-  with a placeholder review segment.
+  with pyannote speaker segments when the model is available, otherwise a clear
+  fallback segment explaining what blocked detection.
 - `ate export <project> --output <file.mkv>`: writes fallback SRT and remuxes
   video/base audio/subtitles.
-- GUI: browse media, analyze, inspect streams/timeline, export MKV.
+- GUI: browse media, analyze, inspect streams/timeline, play detected sections,
+  name speakers, assign preferred tracks, export MKV.
 - `scripts/run-first-test.ps1`: generates synthetic multi-audio MKV and runs
   analyze/export.
+- `scripts/cache-model.ps1 -AllowDownload`: one-time diarization model cache
+  step after accepting model terms and setting `HF_TOKEN`.
 
 ## Known Gaps
 
-- Real diarization and speech separation adapters are not wired into analysis
-  yet.
+- Speech separation is not wired yet.
 - Export does not yet synthesize a true mixed dialogue stem; it remuxes the
   selected base audio plus generated subtitles.
 - GUI is functional but still a scaffold, not a full timeline editor.
-- Model download/cache commands are not implemented beyond dependency install.
 
 ## Logs
 

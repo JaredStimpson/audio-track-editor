@@ -80,3 +80,21 @@ Changes:
 - Added logging transcripts under ignored `logs/`.
 - Added `docs/AI_HANDOFF.md`.
 - Added this prompt history file.
+
+## 2026-06-14: Voice Detection Focus
+
+User asked to focus on optimized voice detection, CPU compatibility, GUI display
+of detected voice sections, playback, speaker naming, and model selection.
+
+Changes:
+
+- Selected `pyannote/speaker-diarization-community-1` as the default local
+  diarization model.
+- Added model config: `ATE_DIARIZATION_MODEL` and `ATE_DIARIZATION_MODEL_PATH`.
+- Added real pyannote diarization adapter with CUDA/CPU auto-selection.
+- `ate analyze` now extracts the selected audio stream and writes detected
+  speaker segments when the model is available.
+- GUI now shows detected voice sections, speaker names, target tracks, overlap
+  flags, and supports lazy preview playback.
+- Added `ate cache-model` and `scripts/cache-model.ps1` for the first model
+  cache/download step.

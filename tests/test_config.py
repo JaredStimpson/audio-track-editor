@@ -46,3 +46,19 @@ def test_load_settings_can_disable_offline_mode(tmp_path: Path, monkeypatch) -> 
     settings = load_settings(tmp_path)
 
     assert settings.offline_mode is False
+
+
+def test_load_settings_reads_diarization_model_path(tmp_path: Path, monkeypatch) -> None:
+    (tmp_path / "pyproject.toml").write_text("[project]\nname='x'\n", encoding="utf-8")
+    (tmp_path / ".env").write_text(
+        "ATE_DIARIZATION_MODEL=pyannote/speaker-diarization-community-1\n"
+        "ATE_DIARIZATION_MODEL_PATH=models/community-1\n",
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("ATE_DIARIZATION_MODEL", raising=False)
+    monkeypatch.delenv("ATE_DIARIZATION_MODEL_PATH", raising=False)
+
+    settings = load_settings(tmp_path)
+
+    assert settings.diarization_model == "pyannote/speaker-diarization-community-1"
+    assert settings.diarization_model_path == (tmp_path / "models/community-1").resolve()

@@ -41,6 +41,7 @@ class Segment:
     subtitle_required: bool = False
     text: str = ""
     notes: str = ""
+    audio_preview_path: str = ""
 
     @property
     def duration(self) -> float:
@@ -54,6 +55,8 @@ class Project:
     streams: list[StreamInfo] = field(default_factory=list)
     speakers: list[SpeakerProfile] = field(default_factory=list)
     segments: list[Segment] = field(default_factory=list)
+    analysis_model: str = ""
+    analysis_device: str = ""
     profile_id: str | None = None
     schema_version: str = "0.1"
     created_by_version: str = __version__
@@ -69,6 +72,8 @@ class Project:
             streams=[StreamInfo(**item) for item in data.get("streams", [])],
             speakers=[SpeakerProfile(**item) for item in data.get("speakers", [])],
             segments=[Segment(**item) for item in data.get("segments", [])],
+            analysis_model=data.get("analysis_model", ""),
+            analysis_device=data.get("analysis_device", ""),
             profile_id=data.get("profile_id"),
             schema_version=data.get("schema_version", "0.1"),
             created_by_version=data.get("created_by_version", __version__),

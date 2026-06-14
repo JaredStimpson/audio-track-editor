@@ -31,6 +31,8 @@ def test_render_project_dry_run_writes_fallback_subtitles(tmp_path: Path) -> Non
         output_dir=tmp_path / "exports",
         hf_token=None,
         offline_mode=True,
+        diarization_model="pyannote/speaker-diarization-community-1",
+        diarization_model_path=None,
         device="cpu",
         confidence_threshold=0.68,
         ffmpeg_bin="ffmpeg",

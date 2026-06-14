@@ -6,6 +6,7 @@ from pathlib import Path
 from audio_track_editor.analysis import AnalyzeOptions, Analyzer
 from audio_track_editor.config import load_settings
 from audio_track_editor.doctor import format_checks, run_doctor
+from audio_track_editor.model_setup import cache_diarization_model
 from audio_track_editor.renderer import render_project
 
 
@@ -17,6 +18,16 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("doctor", help="Check local tools, paths, and optional model deps.")
+
+    cache_model = subparsers.add_parser(
+        "cache-model",
+        help="Download/cache or validate the selected local diarization model.",
+    )
+    cache_model.add_argument(
+        "--allow-download",
+        action="store_true",
+        help="Permit network download for the first model cache step.",
+    )
 
     analyze = subparsers.add_parser("analyze", help="Inspect media and create an analysis project.")
     analyze.add_argument("media", type=Path)
@@ -48,6 +59,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "doctor":
         print(format_checks(run_doctor(settings)))
+        return 0
+
+    if args.command == "cache-model":
+        model = cache_diarization_model(settings, allow_download=args.allow_download)
+        print(f"Diarization model ready: {model}")
+        print(f"Model cache: {settings.model_cache_dir}")
         return 0
 
     if args.command == "analyze":

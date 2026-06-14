@@ -2,6 +2,7 @@ from pathlib import Path
 
 from audio_track_editor.media import (
     build_extract_audio_command,
+    build_extract_segment_command,
     build_passthrough_export_command,
     first_audio_stream,
     parse_ffprobe_streams,
@@ -52,3 +53,17 @@ def test_build_passthrough_export_command_maps_video_audio_and_subtitles() -> No
     assert "0:1" in command
     assert "1:0" in command
     assert command[-1] == "out.mkv"
+
+
+def test_build_extract_segment_command_clips_selected_stream() -> None:
+    command = build_extract_segment_command(
+        Path("episode.mkv"),
+        3,
+        12.345,
+        2.5,
+        Path("preview.wav"),
+    )
+
+    assert command[command.index("-ss") + 1] == "12.345"
+    assert command[command.index("-t") + 1] == "2.500"
+    assert command[command.index("-map") + 1] == "0:3"

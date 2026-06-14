@@ -24,7 +24,8 @@ background bed and minimizing audible gaps.
 The intended local pipeline uses:
 
 - FFmpeg/ffprobe for container inspection, stream extraction, and MKV export.
-- pyannote.audio for speaker diarization.
+- pyannote.audio with `pyannote/speaker-diarization-community-1` for local
+  speaker diarization.
 - WhisperX for speech timing and word alignment.
 - Demucs for vocal/background separation.
 - SpeechBrain or Asteroid adapters for experimental overlap/speaker separation.
@@ -99,6 +100,12 @@ You usually do not put files in `models/` by hand. It is the local cache where
 future model setup/download commands will store files. If the GPU machine is
 offline, you can copy already-downloaded model folders into `models/` there.
 
+Recommended voice detection model:
+
+```dotenv
+ATE_DIARIZATION_MODEL=pyannote/speaker-diarization-community-1
+```
+
 ## Launch
 
 ```powershell
@@ -141,6 +148,15 @@ If the GPU PC is offline, install/cache models while online first, then keep
 
 Avoid `asteroid` at first on Windows. It can pull a package named `pesq` that
 requires Microsoft C++ Build Tools. The normal ML install now skips that path.
+
+First-time model cache/download, only if the model is not already cached:
+
+```powershell
+# Put HF_TOKEN in .env first after accepting the model conditions.
+scripts/cache-model.ps1 -AllowDownload
+```
+
+Normal analysis/export can then stay offline with `ATE_OFFLINE_MODE=true`.
 
 ## First Working Test
 

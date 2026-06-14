@@ -82,6 +82,34 @@ def build_extract_audio_command(
     ]
 
 
+def build_extract_segment_command(
+    media_path: Path,
+    stream_index: int,
+    start: float,
+    duration: float,
+    output_wav: Path,
+    ffmpeg_bin: str = "ffmpeg",
+) -> list[str]:
+    return [
+        ffmpeg_bin,
+        "-y",
+        "-ss",
+        f"{start:.3f}",
+        "-t",
+        f"{duration:.3f}",
+        "-i",
+        str(media_path),
+        "-map",
+        f"0:{stream_index}",
+        "-vn",
+        "-ac",
+        "2",
+        "-ar",
+        "48000",
+        str(output_wav),
+    ]
+
+
 def build_passthrough_export_command(
     media_path: Path,
     subtitle_file: Path,

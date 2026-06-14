@@ -51,7 +51,8 @@ The intended full pipeline is:
 
 1. Use ffprobe to inspect container streams.
 2. Extract analysis WAVs per relevant audio stream.
-3. Run diarization to answer who spoke when.
+3. Run pyannote `speaker-diarization-community-1` locally to answer who spoke
+   when.
 4. Run ASR/alignment to connect timing to text and subtitle cues.
 5. Run vocal/background separation to create a base bed.
 6. Attempt experimental speaker-conditioned separation on overlap-heavy regions.

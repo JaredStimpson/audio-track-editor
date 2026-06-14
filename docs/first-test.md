@@ -52,6 +52,8 @@ In the app:
 
 1. Choose `sample-media/first-test.mkv`.
 2. Click `Analyze`.
-3. Confirm the streams table and timeline fill in.
-4. Click `Export MKV`.
-5. Open `exports/first-test-export.mkv`.
+3. Confirm streams and detected voice sections fill in.
+4. Select a detected section and click `Play Section`.
+5. Name speakers in the right panel and click `Save Speaker Names`.
+6. Click `Export MKV`.
+7. Open `exports/first-test-export.mkv`.

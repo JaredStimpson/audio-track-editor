@@ -14,6 +14,8 @@ class Settings:
     output_dir: Path
     hf_token: str | None
     offline_mode: bool
+    diarization_model: str
+    diarization_model_path: Path | None
     device: str
     confidence_threshold: float
     ffmpeg_bin: str
@@ -60,6 +62,8 @@ def _load_local_toml(path: Path) -> dict[str, str]:
         "ATE_MODEL_CACHE_DIR": paths.get("model_cache_dir"),
         "ATE_OUTPUT_DIR": paths.get("output_dir"),
         "ATE_OFFLINE_MODE": runtime.get("offline_mode"),
+        "ATE_DIARIZATION_MODEL": runtime.get("diarization_model"),
+        "ATE_DIARIZATION_MODEL_PATH": runtime.get("diarization_model_path"),
         "ATE_DEVICE": runtime.get("device"),
         "ATE_CONFIDENCE_THRESHOLD": runtime.get("confidence_threshold"),
         "ATE_FFMPEG_BIN": runtime.get("ffmpeg_bin"),
@@ -111,6 +115,15 @@ def load_settings(root: Path | None = None) -> Settings:
         output_dir=_resolve_path(root_dir, merged.get("ATE_OUTPUT_DIR"), "exports"),
         hf_token=merged.get("HF_TOKEN") or None,
         offline_mode=_as_bool(merged.get("ATE_OFFLINE_MODE"), True),
+        diarization_model=merged.get(
+            "ATE_DIARIZATION_MODEL",
+            "pyannote/speaker-diarization-community-1",
+        ),
+        diarization_model_path=(
+            _resolve_path(root_dir, merged["ATE_DIARIZATION_MODEL_PATH"], "")
+            if merged.get("ATE_DIARIZATION_MODEL_PATH")
+            else None
+        ),
         device=merged.get("ATE_DEVICE", "auto"),
         confidence_threshold=threshold,
         ffmpeg_bin=merged.get("ATE_FFMPEG_BIN", "ffmpeg"),

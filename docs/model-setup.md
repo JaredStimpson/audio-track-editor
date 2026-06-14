@@ -94,6 +94,42 @@ For an offline GPU machine, use one of these paths:
   configured `models/` folder.
 - Point `.env` at an existing model cache outside the repo.
 
+## Recommended Voice Detection Model
+
+Use:
+
+```dotenv
+ATE_DIARIZATION_MODEL=pyannote/speaker-diarization-community-1
+```
+
+This is the selected default because pyannote's current official docs describe
+`Community-1` as the open-source local diarization pipeline and report it as
+better than the legacy `speaker-diarization-3.1` pipeline. It runs locally once
+available in your cache. The premium `precision-2` option is more accurate, but
+it runs through pyannoteAI servers, so it does not match the offline/local-first
+goal.
+
+First-time download/cache:
+
+```powershell
+# 1. Accept the model conditions on Hugging Face.
+# 2. Create a read token and put HF_TOKEN=... in .env.
+# 3. Temporarily allow download for the cache step.
+scripts/cache-model.ps1 -AllowDownload
+```
+
+After that, keep:
+
+```dotenv
+ATE_OFFLINE_MODE=true
+```
+
+If you copy a local model/pipeline folder to the GPU PC, point directly at it:
+
+```dotenv
+ATE_DIARIZATION_MODEL_PATH=C:\path\to\local\speaker-diarization-community-1
+```
+
 ## Optional Model Download Token
 
 If a model requires a token:
@@ -115,10 +151,11 @@ Leave it blank for offline/local-only runs.
 
 Recommended order:
 
-1. Get the app working with `scripts/run-first-test.ps1`.
-2. Install CUDA ML dependencies on the GPU PC with `scripts/setup.ps1 -Device cuda`.
-3. Run `scripts/doctor.ps1` and confirm `Torch/CUDA` says CUDA is available.
-4. Only add `HF_TOKEN` if a chosen model download explicitly requires it.
+1. Install CUDA ML dependencies on the GPU PC with `scripts/setup.ps1 -Device cuda`.
+2. Run `scripts/doctor.ps1` and confirm `Torch/CUDA` says CUDA is available.
+3. If the model is not cached, set `HF_TOKEN` and run `scripts/cache-model.ps1 -AllowDownload`.
+4. Get the app working with `scripts/run-first-test.ps1`.
+5. Launch the GUI and analyze real media.
 
 ## GPU And CPU
 

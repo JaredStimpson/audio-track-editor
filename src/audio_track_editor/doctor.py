@@ -68,6 +68,11 @@ def run_doctor(settings: Settings) -> list[DoctorCheck]:
             "enabled" if settings.offline_mode else "disabled for model download/setup",
         ),
         DoctorCheck(
+            "Diarization model",
+            True,
+            str(settings.diarization_model_path or settings.diarization_model),
+        ),
+        DoctorCheck(
             "Optional model download token",
             True,
             "present" if settings.hf_token else "not configured; local cached models only",

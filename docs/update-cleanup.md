@@ -25,6 +25,12 @@ scripts/install-ml.ps1 -Device cuda
 scripts/doctor.ps1
 ```
 
+If the selected diarization model is not cached yet:
+
+```powershell
+scripts/cache-model.ps1 -AllowDownload
+```
+
 ## Local Cleanup
 
 Normal updates do not remove ignored folders like `.venv`, caches, exports,
