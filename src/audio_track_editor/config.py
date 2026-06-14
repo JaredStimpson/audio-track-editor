@@ -13,6 +13,7 @@ class Settings:
     model_cache_dir: Path
     output_dir: Path
     hf_token: str | None
+    offline_mode: bool
     device: str
     confidence_threshold: float
     ffmpeg_bin: str
@@ -58,6 +59,7 @@ def _load_local_toml(path: Path) -> dict[str, str]:
         "ATE_MEDIA_DIR": paths.get("media_dir"),
         "ATE_MODEL_CACHE_DIR": paths.get("model_cache_dir"),
         "ATE_OUTPUT_DIR": paths.get("output_dir"),
+        "ATE_OFFLINE_MODE": runtime.get("offline_mode"),
         "ATE_DEVICE": runtime.get("device"),
         "ATE_CONFIDENCE_THRESHOLD": runtime.get("confidence_threshold"),
         "ATE_FFMPEG_BIN": runtime.get("ffmpeg_bin"),
@@ -76,6 +78,12 @@ def _resolve_path(root: Path, value: str | None, default: str) -> Path:
     if not expanded.is_absolute():
         expanded = root / expanded
     return expanded.resolve()
+
+
+def _as_bool(value: str | None, default: bool) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def load_settings(root: Path | None = None) -> Settings:
@@ -102,6 +110,7 @@ def load_settings(root: Path | None = None) -> Settings:
         model_cache_dir=_resolve_path(root_dir, merged.get("ATE_MODEL_CACHE_DIR"), "models"),
         output_dir=_resolve_path(root_dir, merged.get("ATE_OUTPUT_DIR"), "exports"),
         hf_token=merged.get("HF_TOKEN") or None,
+        offline_mode=_as_bool(merged.get("ATE_OFFLINE_MODE"), True),
         device=merged.get("ATE_DEVICE", "auto"),
         confidence_threshold=threshold,
         ffmpeg_bin=merged.get("ATE_FFMPEG_BIN", "ffmpeg"),

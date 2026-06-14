@@ -32,9 +32,14 @@ def run_doctor(settings: Settings) -> list[DoctorCheck]:
         DoctorCheck("WhisperX", _module_available("whisperx"), "optional ASR adapter"),
         DoctorCheck("Demucs", _module_available("demucs"), "optional separation adapter"),
         DoctorCheck(
-            "Hugging Face token",
-            bool(settings.hf_token),
-            "HF_TOKEN present" if settings.hf_token else "HF_TOKEN missing",
+            "Offline mode",
+            True,
+            "enabled" if settings.offline_mode else "disabled for model download/setup",
+        ),
+        DoctorCheck(
+            "Optional model download token",
+            True,
+            "present" if settings.hf_token else "not configured; local cached models only",
         ),
         DoctorCheck("Model cache", True, str(settings.model_cache_dir)),
         DoctorCheck("Media dir", True, str(settings.media_dir)),

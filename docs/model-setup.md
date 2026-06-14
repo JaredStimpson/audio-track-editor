@@ -1,8 +1,8 @@
 # Model Setup
 
-The app is designed to run locally after setup. Some model files may still need
-to be downloaded once, and some pyannote models require accepting terms on
-Hugging Face.
+The app is designed to run locally and to support offline use after setup. Some
+model files may need to be downloaded once on a machine with internet, but
+normal analysis/export should use local files and caches.
 
 ## Optional ML Install
 
@@ -14,9 +14,24 @@ prepare for model-backed analysis:
 ```
 
 This installs large packages such as torch, pyannote.audio, WhisperX, Demucs,
-SpeechBrain, and Asteroid. Expect this to take time.
+SpeechBrain, and Asteroid. Expect this to take time. On the GPU machine, run
+this setup there so the CUDA/Torch stack matches that PC.
 
-## Hugging Face Token
+## Model Cache Folder
+
+`ATE_MODEL_CACHE_DIR=models` points to a local cache folder. You usually do not
+put anything there manually during normal development. Future model setup
+commands should populate it.
+
+For an offline GPU machine, use one of these paths:
+
+- Run model setup once while that machine has internet, then keep
+  `ATE_OFFLINE_MODE=true`.
+- Download/cache models on another machine and copy those model folders into the
+  configured `models/` folder.
+- Point `.env` at an existing model cache outside the repo.
+
+## Optional Model Download Token
 
 If a model requires a token:
 
@@ -31,12 +46,17 @@ HF_TOKEN=hf_your_token_here
 
 `.env` is ignored by git.
 
+The token is not for sending media to the cloud. It is only a credential for
+downloading gated model files from a provider that requires accepted terms.
+Leave it blank for offline/local-only runs.
+
 ## GPU And CPU
 
 Set the preferred device:
 
 ```dotenv
 ATE_DEVICE=auto
+ATE_OFFLINE_MODE=true
 ```
 
 Supported values:

@@ -26,6 +26,9 @@ Then create the folder and put personal test files there:
 New-Item -ItemType Directory -Force sample-media
 ```
 
+`scripts/setup.ps1` creates the configured input media, model cache, and output
+folders automatically. They are still ignored by git.
+
 The following paths are ignored by git:
 
 - `.env`
@@ -50,6 +53,7 @@ output_dir = "D:/AudioTrackEditor/exports"
 
 [runtime]
 device = "cuda"
+offline_mode = true
 confidence_threshold = 0.68
 ffmpeg_bin = "ffmpeg"
 ffprobe_bin = "ffprobe"
@@ -60,6 +64,26 @@ hf_token = ""
 
 Values from `.env` override `.ate.local.toml`, and real environment variables
 override both.
+
+## Cleanup
+
+Use this when you want to remove local generated dev artifacts:
+
+```powershell
+scripts/clean-local.ps1
+```
+
+Optional switches remove user-controlled local data too:
+
+```powershell
+scripts/clean-local.ps1 -RemoveEnv
+scripts/clean-local.ps1 -RemoveExports
+scripts/clean-local.ps1 -RemoveModels
+scripts/clean-local.ps1 -RemoveMedia
+```
+
+Those switches delete ignored local files/folders inside the repo only. Keep
+media elsewhere if you want git updates and cleanup to never touch it.
 
 ## Testing Without Media
 

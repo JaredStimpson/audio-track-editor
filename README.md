@@ -10,7 +10,9 @@ uncertain moments.
 The project is early and dev-first. The current scaffold includes the GUI shell,
 CLI, project schema, local config handling, FFmpeg command planning, subtitle
 fallback generation, setup scripts, tests, and docs. The heavy ML adapters are
-kept optional so the repo can test cleanly before large model downloads.
+kept optional so the repo can test cleanly before large model downloads. The
+intended app behavior is local/offline-first: once models are installed or
+cached, analysis and export should run without internet.
 
 ## What It Is Trying To Solve
 
@@ -34,8 +36,9 @@ The intended local pipeline uses:
   segment so the schema, UI, docs, and export path can be exercised.
 - `ate export` currently remuxes copied video, the selected base audio stream,
   and generated fallback subtitles. Full mixed-audio rendering comes next.
-- Model dependencies are optional because they are large and may require tokens
-  or accepted model terms.
+- Model dependencies are optional because they are large. Some model providers
+  may require a token only for the one-time download step, not for normal local
+  processing once files are cached.
 
 ## Requirements
 
@@ -53,8 +56,9 @@ From a PowerShell prompt in the repository:
 scripts/setup.ps1
 ```
 
-That creates `.venv`, installs the GUI/dev dependencies, and copies
-`.env.example` to `.env` if needed.
+That creates `.venv`, installs the GUI/dev dependencies, copies `.env.example`
+to `.env` if needed, and creates the ignored local folders for input media,
+model cache, and exports.
 
 If Python is not on PATH, install Python 3.11+ and rerun setup. If FFmpeg is not
 on PATH, install FFmpeg or set these values in `.env`:
@@ -73,10 +77,15 @@ folder:
 ATE_MEDIA_DIR=sample-media
 ATE_OUTPUT_DIR=exports
 ATE_MODEL_CACHE_DIR=models
+ATE_OFFLINE_MODE=true
 ```
 
 Then put personal test files under `sample-media/` or point `ATE_MEDIA_DIR` at
 another folder outside the repo. See [docs/local-media.md](docs/local-media.md).
+
+You usually do not put files in `models/` by hand. It is the local cache where
+future model setup/download commands will store files. If the GPU machine is
+offline, you can copy already-downloaded model folders into `models/` there.
 
 ## Launch
 
@@ -104,8 +113,9 @@ when you are ready for the heavier local processing path:
 .venv\Scripts\python.exe -m pip install -e ".[ml]"
 ```
 
-Some pyannote models require accepting terms on Hugging Face and setting
-`HF_TOKEN` in `.env`. See [docs/model-setup.md](docs/model-setup.md).
+The app is designed to run locally. `HF_TOKEN` is optional and is only for
+specific one-time model downloads if a provider requires accepted terms. See
+[docs/model-setup.md](docs/model-setup.md).
 
 ## Development
 
@@ -120,6 +130,18 @@ Run lint:
 ```powershell
 .venv\Scripts\python.exe -m ruff check .
 ```
+
+Remove ignored local dev artifacts:
+
+```powershell
+scripts/clean-local.ps1
+```
+
+That removes `.venv`, test/lint caches, and `__pycache__` folders. It keeps
+`.env`, media, models, and exports unless you pass explicit switches.
+
+For GPU-PC update and cleanup commands, see
+[docs/update-cleanup.md](docs/update-cleanup.md).
 
 ## Project Files
 

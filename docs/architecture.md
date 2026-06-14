@@ -61,6 +61,16 @@ The current scaffold implements step 1 and writes a placeholder review segment.
 This lets the CLI, GUI, project schema, tests, and export path settle before the
 large models are integrated.
 
+## Local And Offline Model Policy
+
+`ATE_OFFLINE_MODE=true` is the default. Model adapters should treat that as a
+hard signal to use local paths/caches only during analysis and export. Tokens,
+when configured, are for explicit setup/download flows and not for normal media
+processing.
+
+`models/` is a cache location, not a source folder developers need to populate
+manually. It can be copied to another PC or redirected in `.env`.
+
 ## Rendering And Fallback
 
 The target renderer will keep a user-selected base audio track for background
