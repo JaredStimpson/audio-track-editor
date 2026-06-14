@@ -13,9 +13,15 @@ prepare for model-backed analysis:
 scripts/install-ml.ps1 -Device cuda
 ```
 
-This installs large packages such as torch, pyannote.audio, WhisperX, Demucs,
-SpeechBrain, and Asteroid. Expect this to take time. On the GPU machine, run
-this setup there so the CUDA/Torch stack matches that PC.
+This installs large packages such as torch, pyannote.audio, WhisperX, and
+Demucs. Expect this to take time. On the GPU machine, run this setup there so
+the CUDA/Torch stack matches that PC.
+
+Direct pip equivalent:
+
+```powershell
+.venv\Scripts\python.exe -m pip install -e ".[ml]"
+```
 
 For CPU-only development:
 
@@ -23,14 +29,50 @@ For CPU-only development:
 scripts/install-ml.ps1 -Device cpu
 ```
 
-For the experimental overlap separation packages:
+For the experimental overlap separation package that usually installs cleanly on
+Windows:
 
 ```powershell
 scripts/install-ml.ps1 -Device cuda -ExperimentalSeparation
 ```
 
+Asteroid is kept out of the normal ML install because it can pull `pesq`, which
+often requires Microsoft C++ Build Tools on Windows:
+
+```powershell
+scripts/install-ml.ps1 -Device cuda -Asteroid
+```
+
 The script installs PyTorch first so CUDA wheels are chosen deliberately, then
 installs the local ML/audio adapters.
+
+## Fixing The `pesq` Build Error
+
+If you see an error like this:
+
+```text
+error: Microsoft Visual C++ 14.0 or greater is required
+Failed to build installable wheels ... pesq
+```
+
+That came from Asteroid's optional dependency chain, not from the core app. Use
+the latest repo version, then run the safer install:
+
+```powershell
+git pull origin main
+scripts/setup.ps1
+scripts/install-ml.ps1 -Device cuda
+scripts/doctor.ps1
+```
+
+If partial Asteroid packages were installed, cleanup is optional:
+
+```powershell
+.venv\Scripts\python.exe -m pip uninstall -y asteroid pb-bss-eval pesq torch-stoi torch-optimizer pytorch-ranger
+```
+
+Only install Asteroid later if you also install Microsoft C++ Build Tools or a
+compatible wheel becomes available for your Python version.
 
 ## Model Cache Folder
 

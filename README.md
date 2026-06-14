@@ -127,6 +127,9 @@ scripts/doctor.ps1
 If the GPU PC is offline, install/cache models while online first, then keep
 `ATE_OFFLINE_MODE=true`.
 
+Avoid `asteroid` at first on Windows. It can pull a package named `pesq` that
+requires Microsoft C++ Build Tools. The normal ML install now skips that path.
+
 ## First Working Test
 
 This creates a tiny synthetic MKV with two audio tracks, analyzes it, and exports
