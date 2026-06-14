@@ -14,6 +14,13 @@ scripts/doctor.ps1
 `git pull` updates committed source files. `scripts/setup.ps1` refreshes the
 Python environment and creates the ignored local folders from `.env`.
 
+If the update adds or changes ML dependencies on the GPU PC, run:
+
+```powershell
+scripts/install-ml.ps1 -Device cuda
+scripts/doctor.ps1
+```
+
 ## Local Cleanup
 
 Normal updates do not remove ignored folders like `.venv`, caches, exports,

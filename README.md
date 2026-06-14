@@ -117,6 +117,27 @@ The app is designed to run locally. `HF_TOKEN` is optional and is only for
 specific one-time model downloads if a provider requires accepted terms. See
 [docs/model-setup.md](docs/model-setup.md).
 
+On the GPU PC, install the local ML stack after the base setup:
+
+```powershell
+scripts/install-ml.ps1 -Device cuda
+scripts/doctor.ps1
+```
+
+If the GPU PC is offline, install/cache models while online first, then keep
+`ATE_OFFLINE_MODE=true`.
+
+## First Working Test
+
+This creates a tiny synthetic MKV with two audio tracks, analyzes it, and exports
+a new MKV with the scaffolded fallback subtitle track:
+
+```powershell
+scripts/run-first-test.ps1
+```
+
+See [docs/first-test.md](docs/first-test.md).
+
 ## Development
 
 Run tests:

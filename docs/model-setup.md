@@ -10,12 +10,27 @@ The base repo can run tests and metadata commands without ML dependencies. To
 prepare for model-backed analysis:
 
 ```powershell
-.venv\Scripts\python.exe -m pip install -e ".[ml]"
+scripts/install-ml.ps1 -Device cuda
 ```
 
 This installs large packages such as torch, pyannote.audio, WhisperX, Demucs,
 SpeechBrain, and Asteroid. Expect this to take time. On the GPU machine, run
 this setup there so the CUDA/Torch stack matches that PC.
+
+For CPU-only development:
+
+```powershell
+scripts/install-ml.ps1 -Device cpu
+```
+
+For the experimental overlap separation packages:
+
+```powershell
+scripts/install-ml.ps1 -Device cuda -ExperimentalSeparation
+```
+
+The script installs PyTorch first so CUDA wheels are chosen deliberately, then
+installs the local ML/audio adapters.
 
 ## Model Cache Folder
 
@@ -49,6 +64,13 @@ HF_TOKEN=hf_your_token_here
 The token is not for sending media to the cloud. It is only a credential for
 downloading gated model files from a provider that requires accepted terms.
 Leave it blank for offline/local-only runs.
+
+Recommended order:
+
+1. Get the app working with `scripts/run-first-test.ps1`.
+2. Install CUDA ML dependencies on the GPU PC with `scripts/install-ml.ps1 -Device cuda`.
+3. Run `scripts/doctor.ps1` and confirm `Torch/CUDA` says CUDA is available.
+4. Only add `HF_TOKEN` if a chosen model download explicitly requires it.
 
 ## GPU And CPU
 

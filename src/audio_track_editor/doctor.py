@@ -13,6 +13,7 @@ class DoctorCheck:
     name: str
     ok: bool
     detail: str
+    recommendation: str = ""
 
 
 def _module_available(name: str) -> bool:
@@ -25,12 +26,42 @@ def _module_available(name: str) -> bool:
 def run_doctor(settings: Settings) -> list[DoctorCheck]:
     checks = [
         DoctorCheck("Python", sys.version_info >= (3, 11), sys.version.split()[0]),
-        DoctorCheck("FFmpeg", executable_available(settings.ffmpeg_bin), settings.ffmpeg_bin),
-        DoctorCheck("ffprobe", executable_available(settings.ffprobe_bin), settings.ffprobe_bin),
-        DoctorCheck("PySide6", _module_available("PySide6"), "required for GUI"),
-        DoctorCheck("pyannote.audio", _module_available("pyannote.audio"), "optional ML adapter"),
-        DoctorCheck("WhisperX", _module_available("whisperx"), "optional ASR adapter"),
-        DoctorCheck("Demucs", _module_available("demucs"), "optional separation adapter"),
+        DoctorCheck(
+            "FFmpeg",
+            executable_available(settings.ffmpeg_bin),
+            settings.ffmpeg_bin,
+            "Install FFmpeg or set ATE_FFMPEG_BIN in .env.",
+        ),
+        DoctorCheck(
+            "ffprobe",
+            executable_available(settings.ffprobe_bin),
+            settings.ffprobe_bin,
+            "Install FFmpeg or set ATE_FFPROBE_BIN in .env.",
+        ),
+        DoctorCheck(
+            "PySide6",
+            _module_available("PySide6"),
+            "required for GUI",
+            "Run scripts/setup.ps1 to install GUI dependencies.",
+        ),
+        DoctorCheck(
+            "pyannote.audio",
+            _module_available("pyannote.audio"),
+            "local diarization adapter",
+            "Run scripts/install-ml.ps1 on the GPU PC.",
+        ),
+        DoctorCheck(
+            "WhisperX",
+            _module_available("whisperx"),
+            "local ASR/alignment adapter",
+            "Run scripts/install-ml.ps1 on the GPU PC.",
+        ),
+        DoctorCheck(
+            "Demucs",
+            _module_available("demucs"),
+            "local vocal/background separation adapter",
+            "Run scripts/install-ml.ps1 on the GPU PC.",
+        ),
         DoctorCheck(
             "Offline mode",
             True,
@@ -48,6 +79,7 @@ def run_doctor(settings: Settings) -> list[DoctorCheck]:
 
     torch_detail = "torch unavailable"
     torch_ok = False
+    torch_recommendation = "Run scripts/install-ml.ps1 -Device cuda on the GPU PC."
     if _module_available("torch"):
         import torch
 
@@ -55,13 +87,19 @@ def run_doctor(settings: Settings) -> list[DoctorCheck]:
         torch_ok = settings.device in {"cpu", "auto"} or cuda_ok
         cuda_status = "yes" if cuda_ok else "no"
         torch_detail = f"torch installed; cuda={cuda_status}; device={settings.device}"
-    checks.append(DoctorCheck("Torch/CUDA", torch_ok, torch_detail))
+        if torch_ok:
+            torch_recommendation = ""
+        elif settings.device == "cuda":
+            torch_recommendation = "CUDA is requested but unavailable to torch."
+    checks.append(DoctorCheck("Torch/CUDA", torch_ok, torch_detail, torch_recommendation))
     return checks
 
 
-def format_checks(checks: list[DoctorCheck]) -> str:
+def format_checks(checks: list[DoctorCheck], include_recommendations: bool = True) -> str:
     lines = []
     for check in checks:
         marker = "OK" if check.ok else "WARN"
         lines.append(f"[{marker}] {check.name}: {check.detail}")
+        if include_recommendations and not check.ok and check.recommendation:
+            lines.append(f"  Next: {check.recommendation}")
     return "\n".join(lines)
