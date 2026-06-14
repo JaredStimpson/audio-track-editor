@@ -1,0 +1,26 @@
+.env
+.ate.local.toml
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# Local media and generated artifacts. Do not commit copyrighted media.
+sample-media/
+local-media/
+models/
+exports/
+analysis-cache/
+.ate-cache/
+*.ateproj.json
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

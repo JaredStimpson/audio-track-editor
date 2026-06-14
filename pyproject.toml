@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "audio-track-editor"
+version = "0.1.0"
+description = "Local desktop tool for per-speaker language audio track editing."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Jared Stimpson" }]
+keywords = ["audio", "video", "ffmpeg", "diarization", "subtitles"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Win32 (MS Windows)",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Sound/Audio",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = []
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.7,<7"]
+ml = [
+  "torch>=2.3",
+  "pyannote.audio>=3.3",
+  "whisperx>=3.1",
+  "demucs>=4.0",
+  "speechbrain>=1.0",
+  "asteroid>=0.7",
+]
+dev = ["pytest>=8.2", "ruff>=0.5"]
+
+[project.scripts]
+ate = "audio_track_editor.cli:main"
+audio-track-editor = "audio_track_editor.gui.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/audio_track_editor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
