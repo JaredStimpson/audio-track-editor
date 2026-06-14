@@ -53,12 +53,24 @@ The intended local pipeline uses:
 From a PowerShell prompt in the repository:
 
 ```powershell
-scripts/setup.ps1
+scripts/setup.ps1 -Device cuda
 ```
 
-That creates `.venv`, installs the GUI/dev dependencies, copies `.env.example`
-to `.env` if needed, and creates the ignored local folders for input media,
-model cache, and exports.
+That creates `.venv`, installs GUI/dev dependencies, installs the core local ML
+stack, copies `.env.example` to `.env` if needed, creates ignored local folders,
+runs `ate doctor`, and writes a transcript log under `logs/`.
+
+For this dev PC or a CPU-only machine:
+
+```powershell
+scripts/setup.ps1 -Device cpu
+```
+
+To refresh only the non-ML app setup:
+
+```powershell
+scripts/setup.ps1 -SkipMl
+```
 
 If Python is not on PATH, install Python 3.11+ and rerun setup. If FFmpeg is not
 on PATH, install FFmpeg or set these values in `.env`:
@@ -117,10 +129,10 @@ The app is designed to run locally. `HF_TOKEN` is optional and is only for
 specific one-time model downloads if a provider requires accepted terms. See
 [docs/model-setup.md](docs/model-setup.md).
 
-On the GPU PC, install the local ML stack after the base setup:
+On the GPU PC, setup now installs the local ML stack by default:
 
 ```powershell
-scripts/install-ml.ps1 -Device cuda
+scripts/setup.ps1 -Device cuda
 scripts/doctor.ps1
 ```
 
@@ -137,6 +149,12 @@ a new MKV with the scaffolded fallback subtitle track:
 
 ```powershell
 scripts/run-first-test.ps1
+```
+
+Or run it as part of setup:
+
+```powershell
+scripts/setup.ps1 -Device cuda -RunFirstTest
 ```
 
 See [docs/first-test.md](docs/first-test.md).
@@ -167,6 +185,10 @@ That removes `.venv`, test/lint caches, and `__pycache__` folders. It keeps
 For GPU-PC update and cleanup commands, see
 [docs/update-cleanup.md](docs/update-cleanup.md).
 
+For another AI or future debugging session, start with
+[docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) and attach the latest files from
+`logs/`.
+
 ## Project Files
 
 - `.ateproj.json`: per-media project state with streams, speakers, segments,
@@ -182,6 +204,6 @@ After reviewing changes locally:
 ```powershell
 git status
 git add .
-git commit -m "Initial audio track editor scaffold"
-git push origin main
+git commit -m "Make setup all-in-one for test branch"
+git push -u origin test
 ```

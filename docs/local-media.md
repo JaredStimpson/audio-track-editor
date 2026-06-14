@@ -80,6 +80,7 @@ scripts/clean-local.ps1 -RemoveEnv
 scripts/clean-local.ps1 -RemoveExports
 scripts/clean-local.ps1 -RemoveModels
 scripts/clean-local.ps1 -RemoveMedia
+scripts/clean-local.ps1 -RemoveLogs
 ```
 
 Those switches delete ignored local files/folders inside the repo only. Keep

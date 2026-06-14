@@ -6,13 +6,17 @@ Use these commands on the GPU PC after changes have been pushed to GitHub.
 
 ```powershell
 cd C:\path\to\audio-track-editor
-git pull origin main
-scripts/setup.ps1
+git fetch origin
+git switch test
+git pull origin test
+scripts/setup.ps1 -Device cuda
 scripts/doctor.ps1
 ```
 
-`git pull` updates committed source files. `scripts/setup.ps1` refreshes the
-Python environment and creates the ignored local folders from `.env`.
+`git pull origin test` updates committed source files from the current test
+branch. `scripts/setup.ps1 -Device cuda` refreshes the Python environment,
+installs the core local ML stack, creates the ignored local folders from `.env`,
+and writes a setup log under `logs/`.
 
 If the update adds or changes ML dependencies on the GPU PC, run:
 
@@ -39,7 +43,7 @@ That removes:
 - `analysis-cache`
 - `__pycache__` folders
 
-It does not remove `.env`, media, models, or exports by default.
+It does not remove `.env`, media, models, exports, or logs by default.
 
 Use explicit switches for those:
 
@@ -48,6 +52,7 @@ scripts/clean-local.ps1 -RemoveEnv
 scripts/clean-local.ps1 -RemoveExports
 scripts/clean-local.ps1 -RemoveModels
 scripts/clean-local.ps1 -RemoveMedia
+scripts/clean-local.ps1 -RemoveLogs
 ```
 
 Be careful with `-RemoveMedia` and `-RemoveModels` if those folders contain files

@@ -7,8 +7,14 @@ No copyrighted media is needed.
 ## Run
 
 ```powershell
-scripts/setup.ps1
+scripts/setup.ps1 -Device cuda
 scripts/run-first-test.ps1
+```
+
+You can also run the first test at the end of setup:
+
+```powershell
+scripts/setup.ps1 -Device cuda -RunFirstTest
 ```
 
 The script writes ignored local files:

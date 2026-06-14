@@ -2,7 +2,8 @@ param(
     [switch]$RemoveEnv,
     [switch]$RemoveMedia,
     [switch]$RemoveModels,
-    [switch]$RemoveExports
+    [switch]$RemoveExports,
+    [switch]$RemoveLogs
 )
 
 $ErrorActionPreference = "Stop"
@@ -51,6 +52,10 @@ if ($RemoveModels) {
 
 if ($RemoveExports) {
     Remove-RepoPath "exports"
+}
+
+if ($RemoveLogs) {
+    Remove-RepoPath "logs"
 }
 
 Write-Host "Local cleanup complete."

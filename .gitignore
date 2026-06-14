@@ -17,6 +17,7 @@ models/
 exports/
 analysis-cache/
 .ate-cache/
+logs/
 *.ateproj.json
 
 # OS/editor noise

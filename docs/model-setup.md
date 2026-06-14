@@ -10,7 +10,7 @@ The base repo can run tests and metadata commands without ML dependencies. To
 prepare for model-backed analysis:
 
 ```powershell
-scripts/install-ml.ps1 -Device cuda
+scripts/setup.ps1 -Device cuda
 ```
 
 This installs large packages such as torch, pyannote.audio, WhisperX, and
@@ -21,6 +21,12 @@ Direct pip equivalent:
 
 ```powershell
 .venv\Scripts\python.exe -m pip install -e ".[ml]"
+```
+
+If the base app is already set up and only ML needs repair:
+
+```powershell
+scripts/install-ml.ps1 -Device cuda
 ```
 
 For CPU-only development:
@@ -110,7 +116,7 @@ Leave it blank for offline/local-only runs.
 Recommended order:
 
 1. Get the app working with `scripts/run-first-test.ps1`.
-2. Install CUDA ML dependencies on the GPU PC with `scripts/install-ml.ps1 -Device cuda`.
+2. Install CUDA ML dependencies on the GPU PC with `scripts/setup.ps1 -Device cuda`.
 3. Run `scripts/doctor.ps1` and confirm `Torch/CUDA` says CUDA is available.
 4. Only add `HF_TOKEN` if a chosen model download explicitly requires it.
 
