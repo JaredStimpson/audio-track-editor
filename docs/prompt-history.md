@@ -105,3 +105,12 @@ User shared a CPU setup log where `scripts/setup.ps1 -Device cpu` failed while
 calling `install-ml.ps1`. Root cause: setup used an array splat, so PowerShell
 passed `-Device` as the positional `Device` value. Fixed setup to use a
 hashtable splat for named parameters.
+
+## 2026-06-14: AudioDecoder Analyze Failure
+
+User shared an Analyze failure screenshot: `name 'AudioDecoder' is not defined`.
+Likely cause: pyannote tried to decode a file path through its torchcodec
+`AudioDecoder` path, but that loader was unavailable in the runtime. Fixed
+diarization to extract mono 16 kHz WAV with FFmpeg, load it in Python, and pass
+`{"waveform": ..., "sample_rate": ...}` into pyannote instead of a file path.
+The GUI now shows fallback notes in the detected voice sections table.

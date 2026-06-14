@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
+import wave
+from array import array
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -83,6 +86,43 @@ def _load_pipeline(settings: Settings, device: str):
     return pipeline, model_origin
 
 
+def _load_wav_for_pipeline(path: Path):
+    try:
+        import torch
+    except ImportError as exc:
+        raise DiarizationUnavailable("Torch is required to load audio for diarization.") from exc
+
+    with wave.open(str(path), "rb") as wav:
+        channels = wav.getnchannels()
+        sample_width = wav.getsampwidth()
+        sample_rate = wav.getframerate()
+        frames = wav.readframes(wav.getnframes())
+
+    if sample_width == 2:
+        samples = array("h")
+        scale = 32768.0
+    elif sample_width == 4:
+        samples = array("i")
+        scale = 2147483648.0
+    else:
+        raise DiarizationUnavailable(
+            f"Unsupported WAV sample width: {sample_width}. "
+            "FFmpeg should create 16-bit or 32-bit PCM WAV."
+        )
+
+    samples.frombytes(frames)
+    if sys.byteorder == "big":
+        samples.byteswap()
+
+    waveform = torch.tensor(samples, dtype=torch.float32) / scale
+    if channels > 1:
+        waveform = waveform.reshape(-1, channels).transpose(0, 1).contiguous()
+    else:
+        waveform = waveform.unsqueeze(0)
+
+    return {"waveform": waveform, "sample_rate": sample_rate}
+
+
 def _extract_turns(output) -> list[tuple[float, float, str]]:
     diarization = getattr(output, "speaker_diarization", output)
 
@@ -130,7 +170,17 @@ def run_diarization(
         raise MediaToolError(completed.stderr.strip() or "FFmpeg audio extraction failed")
 
     pipeline, model_origin = _load_pipeline(settings, device)
-    output = pipeline(str(analysis_wav))
+    waveform = _load_wav_for_pipeline(analysis_wav)
+    try:
+        output = pipeline(waveform)
+    except NameError as exc:
+        if "AudioDecoder" in str(exc):
+            raise DiarizationUnavailable(
+                "pyannote tried to use its torchcodec AudioDecoder but it is unavailable. "
+                "The app attempted waveform mode; rerun setup so torch/pyannote versions are "
+                "consistent, then try Analyze again."
+            ) from exc
+        raise
 
     turns = _extract_turns(output)
     speaker_ids = sorted({speaker for _, _, speaker in turns})

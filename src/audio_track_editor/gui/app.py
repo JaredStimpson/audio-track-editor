@@ -104,7 +104,7 @@ if QtWidgets is not None:
         def _build_timeline_panel(self) -> QtWidgets.QWidget:
             panel = QtWidgets.QGroupBox("Detected Voice Sections")
             layout = QtWidgets.QVBoxLayout(panel)
-            self.timeline = QtWidgets.QTableWidget(0, 8)
+            self.timeline = QtWidgets.QTableWidget(0, 9)
             self.timeline.setHorizontalHeaderLabels(
                 [
                     "Start",
@@ -115,6 +115,7 @@ if QtWidgets is not None:
                     "Confidence",
                     "Subtitle",
                     "Overlap",
+                    "Notes",
                 ]
             )
             self.timeline.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
@@ -223,6 +224,12 @@ if QtWidgets is not None:
             self.current_project_path = Path(project_text)
             self._load_project(project)
             self.status.showMessage(f"Project saved: {project_text}")
+            if not project.analysis_model and project.segments:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Voice Detection Fallback",
+                    project.segments[0].notes or "Voice detection did not produce model output.",
+                )
 
         def _load_project(self, project: Project) -> None:
             self.streams.clear()
@@ -269,6 +276,7 @@ if QtWidgets is not None:
                     f"{segment.confidence:.2f}",
                     "yes" if segment.subtitle_required else "no",
                     "yes" if segment.overlap else "no",
+                    segment.notes,
                 ]
                 for column, value in enumerate(values):
                     self.timeline.setItem(row, column, QtWidgets.QTableWidgetItem(value))

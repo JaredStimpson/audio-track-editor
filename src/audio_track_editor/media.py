@@ -75,9 +75,9 @@ def build_extract_audio_command(
         f"0:{stream_index}",
         "-vn",
         "-ac",
-        "2",
+        "1",
         "-ar",
-        "48000",
+        "16000",
         str(output_wav),
     ]
 

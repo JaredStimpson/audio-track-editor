@@ -37,6 +37,8 @@ def test_build_extract_audio_command_maps_stream() -> None:
 
     assert command[0] == "ffmpeg"
     assert command[command.index("-map") + 1] == "0:2"
+    assert command[command.index("-ac") + 1] == "1"
+    assert command[command.index("-ar") + 1] == "16000"
     assert command[-1] == "track.wav"
 
 

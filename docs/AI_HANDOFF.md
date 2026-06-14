@@ -29,6 +29,9 @@ after dependencies/models are installed or cached.
 
 - Default setup now installs the core local ML stack.
 - Selected diarization model: `pyannote/speaker-diarization-community-1`.
+- Diarization passes an FFmpeg-extracted mono 16 kHz waveform into pyannote
+  instead of passing a file path, to avoid Windows `AudioDecoder`/torchcodec
+  loader failures.
 - Asteroid is not in the default ML path because it pulls `pesq`, which failed
   on Windows without Microsoft C++ Build Tools.
 - `HF_TOKEN` is optional and only for one-time downloads of gated model files.
