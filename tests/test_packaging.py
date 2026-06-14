@@ -17,6 +17,8 @@ def test_setup_is_all_in_one_and_logs() -> None:
     assert "install-ml.ps1" in setup
     assert "Start-Transcript" in setup
     assert "-SkipMl" in setup
+    assert "$InstallArgs = @{" in setup
+    assert '@("-Device", $Device' not in setup
 
 
 def test_handoff_docs_exist() -> None:

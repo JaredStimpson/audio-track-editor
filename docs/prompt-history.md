@@ -98,3 +98,10 @@ Changes:
   flags, and supports lazy preview playback.
 - Added `ate cache-model` and `scripts/cache-model.ps1` for the first model
   cache/download step.
+
+## 2026-06-14: CPU Setup Script Fix
+
+User shared a CPU setup log where `scripts/setup.ps1 -Device cpu` failed while
+calling `install-ml.ps1`. Root cause: setup used an array splat, so PowerShell
+passed `-Device` as the positional `Device` value. Fixed setup to use a
+hashtable splat for named parameters.

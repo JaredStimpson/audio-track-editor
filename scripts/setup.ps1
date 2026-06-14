@@ -89,12 +89,16 @@ try {
     Write-Host "  Exports:     $OutputDir"
 
     if (-not $SkipMl) {
-        $InstallArgs = @("-Device", $Device, "-CudaWheel", $CudaWheel, "-NoTranscript")
+        $InstallArgs = @{
+            Device = $Device
+            CudaWheel = $CudaWheel
+            NoTranscript = $true
+        }
         if ($ExperimentalSeparation) {
-            $InstallArgs += "-ExperimentalSeparation"
+            $InstallArgs.ExperimentalSeparation = $true
         }
         if ($Asteroid) {
-            $InstallArgs += "-Asteroid"
+            $InstallArgs.Asteroid = $true
         }
         & (Join-Path $PSScriptRoot "install-ml.ps1") @InstallArgs
     } else {
