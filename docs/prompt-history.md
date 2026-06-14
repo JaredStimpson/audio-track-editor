@@ -114,3 +114,11 @@ Likely cause: pyannote tried to decode a file path through its torchcodec
 diarization to extract mono 16 kHz WAV with FFmpeg, load it in Python, and pass
 `{"waveform": ..., "sample_rate": ...}` into pyannote instead of a file path.
 The GUI now shows fallback notes in the detected voice sections table.
+
+## 2026-06-14: Startup TorchCodec Warning
+
+User shared the full launch warning from pyannote: torchcodec could not load
+`libtorchcodec`, and pyannote warned that built-in decoding would fail. This
+confirmed the waveform-mode fix is the right approach. Also patched doctor to
+check installed package metadata instead of importing `pyannote.audio` during
+GUI startup, so launch should not print that warning just from status checks.

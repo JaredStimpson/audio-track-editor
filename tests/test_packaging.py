@@ -21,6 +21,13 @@ def test_setup_is_all_in_one_and_logs() -> None:
     assert '@("-Device", $Device' not in setup
 
 
+def test_doctor_uses_distribution_checks_for_pyannote() -> None:
+    doctor = Path("src/audio_track_editor/doctor.py").read_text(encoding="utf-8")
+
+    assert '_distribution_available("pyannote.audio")' in doctor
+    assert '_module_available("pyannote.audio")' not in doctor
+
+
 def test_handoff_docs_exist() -> None:
     assert Path("docs/AI_HANDOFF.md").exists()
     assert Path("docs/prompt-history.md").exists()
