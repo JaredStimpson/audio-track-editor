@@ -142,3 +142,19 @@ Changes:
 - GUI now includes audio track selection, speaker mute toggles, status/progress
   indication, and export reporting for muted regions.
 - Added CLI helpers: `ate speakers` and `ate set-speaker`.
+
+## 2026-06-17: Pyannote Warning Cleanup
+
+User shared launch/analyze terminal output where pyannote warned that
+torchcodec could not load `libtorchcodec_core*.dll`, followed by a PyTorch
+`std()` degrees-of-freedom warning. These are noisy warnings for backend paths
+or short internal tensors, not the app's primary failure signal.
+
+Changes:
+
+- Added a narrow warning guard around pyannote import, model load, device move,
+  model cache, and waveform-based analysis.
+- Documented that Audio Track Editor uses FFmpeg extraction plus preloaded
+  waveform tensors instead of pyannote's built-in file decoder.
+- Added a unit test to ensure the known warning is hidden while unrelated
+  warnings still surface.

@@ -3,8 +3,11 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import warnings
 import wave
 from array import array
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,6 +18,24 @@ from audio_track_editor.schemas import Segment, SpeakerProfile
 
 class DiarizationUnavailable(RuntimeError):
     """Raised when model-backed diarization cannot run in this environment."""
+
+
+@contextmanager
+def suppress_known_pyannote_warnings() -> Iterator[None]:
+    """Hide noisy pyannote warnings for backend paths the app does not use."""
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=r".*torchcodec is not installed correctly.*",
+            category=UserWarning,
+        )
+        warnings.filterwarnings(
+            "ignore",
+            message=r".*std\(\): degrees of freedom is <= 0.*",
+            category=UserWarning,
+        )
+        yield
 
 
 @dataclass(frozen=True)
@@ -61,7 +82,8 @@ def _prepare_model_environment(settings: Settings) -> None:
 def _load_pipeline(settings: Settings, device: str):
     try:
         import torch
-        from pyannote.audio import Pipeline
+        with suppress_known_pyannote_warnings():
+            from pyannote.audio import Pipeline
     except ImportError as exc:
         raise DiarizationUnavailable(
             "pyannote.audio and torch are required for voice detection. "
@@ -73,7 +95,8 @@ def _load_pipeline(settings: Settings, device: str):
     model_origin = str(settings.diarization_model_path or settings.diarization_model)
     token = settings.hf_token if not settings.diarization_model_path else None
     try:
-        pipeline = Pipeline.from_pretrained(model_origin, token=token)
+        with suppress_known_pyannote_warnings():
+            pipeline = Pipeline.from_pretrained(model_origin, token=token)
     except Exception as exc:
         raise DiarizationUnavailable(
             "Could not load the diarization model. For the recommended model, accept "
@@ -82,7 +105,8 @@ def _load_pipeline(settings: Settings, device: str):
             f"local cached pipeline. Original error: {exc}"
         ) from exc
 
-    pipeline.to(torch.device(device))
+    with suppress_known_pyannote_warnings():
+        pipeline.to(torch.device(device))
     return pipeline, model_origin
 
 
@@ -172,7 +196,8 @@ def run_diarization(
     pipeline, model_origin = _load_pipeline(settings, device)
     waveform = _load_wav_for_pipeline(analysis_wav)
     try:
-        output = pipeline(waveform)
+        with suppress_known_pyannote_warnings():
+            output = pipeline(waveform)
     except NameError as exc:
         if "AudioDecoder" in str(exc):
             raise DiarizationUnavailable(

@@ -3,12 +3,17 @@ from __future__ import annotations
 import os
 
 from audio_track_editor.config import Settings
-from audio_track_editor.diarization import DiarizationUnavailable, _prepare_model_environment
+from audio_track_editor.diarization import (
+    DiarizationUnavailable,
+    _prepare_model_environment,
+    suppress_known_pyannote_warnings,
+)
 
 
 def cache_diarization_model(settings: Settings, allow_download: bool = False) -> str:
     try:
-        from pyannote.audio import Pipeline
+        with suppress_known_pyannote_warnings():
+            from pyannote.audio import Pipeline
     except ImportError as exc:
         raise DiarizationUnavailable(
             "pyannote.audio is required before caching the diarization model. "
@@ -30,10 +35,11 @@ def cache_diarization_model(settings: Settings, allow_download: bool = False) ->
         )
 
     try:
-        Pipeline.from_pretrained(
-            model_origin,
-            token=settings.hf_token if not settings.diarization_model_path else None,
-        )
+        with suppress_known_pyannote_warnings():
+            Pipeline.from_pretrained(
+                model_origin,
+                token=settings.hf_token if not settings.diarization_model_path else None,
+            )
     except Exception as exc:
         raise DiarizationUnavailable(
             f"Could not cache/load diarization model {model_origin}. Original error: {exc}"

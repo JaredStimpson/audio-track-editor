@@ -35,6 +35,9 @@ after dependencies/models are installed or cached.
 - Diarization passes an FFmpeg-extracted mono 16 kHz waveform into pyannote
   instead of passing a file path, to avoid Windows `AudioDecoder`/torchcodec
   loader failures.
+- Known pyannote torchcodec decoder warnings are suppressed around model
+  import/load/run because this app uses preloaded waveform tensors instead of
+  pyannote's built-in file decoder path.
 - Asteroid is not in the default ML path because it pulls `pesq`, which failed
   on Windows without Microsoft C++ Build Tools.
 - `HF_TOKEN` is optional and only for one-time downloads of gated model files.

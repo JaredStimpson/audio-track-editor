@@ -1,4 +1,5 @@
 import sys
+import warnings
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +9,7 @@ from audio_track_editor.diarization import (
     _extract_turns,
     _mark_overlaps,
     resolve_torch_device,
+    suppress_known_pyannote_warnings,
 )
 from audio_track_editor.schemas import Segment
 
@@ -48,3 +50,17 @@ def test_mark_overlaps_marks_different_speakers() -> None:
     assert marked[0].overlap is True
     assert marked[1].overlap is True
     assert marked[2].overlap is False
+
+
+def test_known_pyannote_warning_guard_keeps_other_warnings() -> None:
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        with suppress_known_pyannote_warnings():
+            warnings.warn(
+                "torchcodec is not installed correctly so built-in audio decoding will fail",
+                UserWarning,
+                stacklevel=1,
+            )
+            warnings.warn("something else happened", UserWarning, stacklevel=1)
+
+    assert [str(item.message) for item in caught] == ["something else happened"]

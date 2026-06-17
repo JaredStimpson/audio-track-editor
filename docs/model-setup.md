@@ -184,3 +184,15 @@ user opt-in.
 pyannote has optional telemetry in its own library. Audio Track Editor should
 default to local/private behavior and document any telemetry-related settings
 when the adapter is implemented.
+
+## TorchCodec Warning On Windows
+
+If pyannote prints a warning that `torchcodec is not installed correctly` or
+that `libtorchcodec_core*.dll` could not load, that warning refers to
+pyannote's built-in file decoder. Audio Track Editor extracts audio with FFmpeg
+and passes preloaded waveform tensors into pyannote, so that decoder is not the
+normal app path.
+
+The app suppresses this known warning around model import/load/analyze. A real
+analyze failure should still appear in the GUI segment notes and the latest
+`logs/launch-*.log`.
