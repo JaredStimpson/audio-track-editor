@@ -2,8 +2,10 @@ from pathlib import Path
 
 from audio_track_editor.media import (
     build_extract_audio_command,
+    build_extract_render_audio_command,
     build_extract_segment_command,
     build_passthrough_export_command,
+    build_remux_with_modified_audio_command,
     first_audio_stream,
     parse_ffprobe_streams,
 )
@@ -54,6 +56,28 @@ def test_build_passthrough_export_command_maps_video_audio_and_subtitles() -> No
     assert "0:v:0?" in command
     assert "0:1" in command
     assert "1:0" in command
+    assert command[-1] == "out.mkv"
+
+
+def test_build_extract_render_audio_command_uses_high_quality_pcm() -> None:
+    command = build_extract_render_audio_command(Path("episode.mkv"), 1, Path("render.wav"))
+
+    assert command[command.index("-map") + 1] == "0:1"
+    assert command[command.index("-ac") + 1] == "2"
+    assert command[command.index("-ar") + 1] == "48000"
+    assert command[command.index("-sample_fmt") + 1] == "s16"
+
+
+def test_build_remux_with_modified_audio_command_uses_new_audio_and_original_subs() -> None:
+    command = build_remux_with_modified_audio_command(
+        Path("episode.mkv"),
+        Path("muted.wav"),
+        Path("out.mkv"),
+    )
+
+    assert "0:v:0?" in command
+    assert "1:a:0" in command
+    assert "0:s?" in command
     assert command[-1] == "out.mkv"
 
 

@@ -1,8 +1,10 @@
 # Architecture
 
 Audio Track Editor is organized around a small, testable core and optional heavy
-adapters. The app should remain usable for metadata inspection and project
-editing even when ML dependencies have not been installed yet.
+adapters. The MVP is timeline-based speaker muting inside one selected
+audio/language track at a time. The app should remain usable for metadata
+inspection and project editing even when ML dependencies have not been installed
+yet.
 
 ## Components
 
@@ -18,8 +20,10 @@ editing even when ML dependencies have not been installed yet.
   diarization/alignment/separation adapters as they are added.
 - `audio_track_editor.timeline` applies confidence fallback rules, segment
   merging, and crossfade planning.
-- `audio_track_editor.renderer` writes generated subtitle cues and runs FFmpeg
-  remux/export commands.
+- `audio_track_editor.muting` renders a modified WAV by applying padded
+  fade-aware mute envelopes for selected speakers.
+- `audio_track_editor.renderer` writes generated subtitle cues and exports either
+  muted WAV or remuxed video with the modified audio.
 
 ## Project Schema
 
@@ -30,9 +34,11 @@ stores:
 - selected base audio stream
 - video/audio/subtitle stream metadata
 - detected speaker IDs and optional human labels
+- speaker mute toggles
 - segment start/end times
 - source and target audio streams
 - confidence, overlap, and subtitle fallback flags
+- render settings for fade, padding, merge gap, and mute gain
 
 The schema is intentionally simple for the first version. Future migrations
 should preserve old project loading and add a migration command before breaking
@@ -74,14 +80,14 @@ manually. It can be copied to another PC or redirected in `.env`.
 
 ## Rendering And Fallback
 
-The target renderer will keep a user-selected base audio track for background
-music/effects, then mix selected-language dialogue stems into that bed. It should
-crossfade segment boundaries to minimize audible gaps.
+The MVP renderer extracts a high-quality 48 kHz stereo WAV for the selected
+track, collects all segments belonging to muted speakers, applies pre/post
+padding, merges nearby regions, and writes an output WAV with short fade down/up
+around muted sections.
 
-When confidence is low or speakers overlap, the renderer should prefer
-continuity: choose the closest selected language track and force subtitles for
-that region. The current scaffold already generates fallback SRT cues for
-segments marked `subtitle_required`.
+This is not true voice-only removal. Background music, sound effects, and other
+overlapping speakers may also be muted during selected regions. Later versions
+can add dialogue stem separation and target-speaker suppression.
 
 ## Failure Modes
 

@@ -15,7 +15,7 @@ def test_project_round_trip(tmp_path: Path) -> None:
         media_path="sample-media/episode.mkv",
         base_audio_stream=1,
         streams=[StreamInfo(index=1, type="audio", language="jpn")],
-        speakers=[SpeakerProfile(speaker_id="speaker-00", label="Hero")],
+        speakers=[SpeakerProfile(speaker_id="speaker-00", label="Hero", muted=True)],
         segments=[
             Segment(
                 segment_id="segment-1",
@@ -34,4 +34,5 @@ def test_project_round_trip(tmp_path: Path) -> None:
     assert loaded.media_path == project.media_path
     assert loaded.streams[0].language == "jpn"
     assert loaded.speakers[0].label == "Hero"
+    assert loaded.speakers[0].muted is True
     assert loaded.segments[0].duration == 1.5

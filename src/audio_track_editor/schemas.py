@@ -23,6 +23,7 @@ class StreamInfo:
 class SpeakerProfile:
     speaker_id: str
     label: str = ""
+    muted: bool = False
     preferred_audio_stream: int | None = None
     preferred_subtitle_stream: int | None = None
     subtitles: str = "auto"
@@ -42,10 +43,20 @@ class Segment:
     text: str = ""
     notes: str = ""
     audio_preview_path: str = ""
+    manually_corrected: bool = False
 
     @property
     def duration(self) -> float:
         return max(0.0, self.end - self.start)
+
+
+@dataclass
+class RenderSettings:
+    fade_ms: int = 50
+    pre_padding_ms: int = 80
+    post_padding_ms: int = 120
+    merge_gap_ms: int = 150
+    mute_gain: float = 0.0
 
 
 @dataclass
@@ -55,6 +66,7 @@ class Project:
     streams: list[StreamInfo] = field(default_factory=list)
     speakers: list[SpeakerProfile] = field(default_factory=list)
     segments: list[Segment] = field(default_factory=list)
+    render_settings: RenderSettings = field(default_factory=RenderSettings)
     analysis_model: str = ""
     analysis_device: str = ""
     profile_id: str | None = None
@@ -72,6 +84,7 @@ class Project:
             streams=[StreamInfo(**item) for item in data.get("streams", [])],
             speakers=[SpeakerProfile(**item) for item in data.get("speakers", [])],
             segments=[Segment(**item) for item in data.get("segments", [])],
+            render_settings=RenderSettings(**data.get("render_settings", {})),
             analysis_model=data.get("analysis_model", ""),
             analysis_device=data.get("analysis_device", ""),
             profile_id=data.get("profile_id"),

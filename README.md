@@ -1,11 +1,10 @@
 # Audio Track Editor
 
-Audio Track Editor is a Windows-first desktop app for experimenting with
-per-speaker language mixing in multi-audio video files. The target workflow is:
-import an MKV/MP4, inspect the audio/subtitle streams, detect speaker segments,
-label characters, choose which language each character should use, and export a
-new MKV with copied video, mixed audio, and a generated soft subtitle track for
-uncertain moments.
+Audio Track Editor is a Windows-first desktop app for local speaker diarization
+and timeline-based speaker muting in multi-audio video files. The target MVP
+workflow is: import an MKV/MP4/MOV, choose one audio/language track, detect
+recurring speakers inside that track, preview/name speakers, mute one or more
+speakers globally, and export a modified WAV or remuxed video.
 
 The project is early and dev-first. The current scaffold includes the GUI shell,
 CLI, project schema, local config handling, FFmpeg command planning, subtitle
@@ -16,10 +15,15 @@ cached, analysis and export should run without internet.
 
 ## What It Is Trying To Solve
 
-Dubbed shows often have multiple language tracks, but players usually choose one
-whole track at a time. This app is designed to let a viewer keep one character in
-one language and another character in another language, while preserving the
-background bed and minimizing audible gaps.
+Dubbed shows often have multiple language tracks, but the first realistic step is
+to process each track independently. The app does not try to prove that an
+English voice and a Japanese voice are the same character. You analyze one track,
+decide which detected voices to mute in that track, then render/export.
+
+MVP muting is timeline-based: when a selected speaker is detected, the whole
+audio is reduced/muted during that time range with short padding and fades. This
+may also reduce background music/SFX or overlapping speakers in that region.
+True speaker-selective voice removal is a later research feature.
 
 The intended local pipeline uses:
 
@@ -35,8 +39,8 @@ The intended local pipeline uses:
 - The first scaffold does not yet run full diarization or speech separation.
 - `ate analyze` currently inspects streams and writes a placeholder review
   segment so the schema, UI, docs, and export path can be exercised.
-- `ate export` currently remuxes copied video, the selected base audio stream,
-  and generated fallback subtitles. Full mixed-audio rendering comes next.
+- `ate export` renders muted audio for selected speakers and can remux original
+  video with that modified audio.
 - Model dependencies are optional because they are large. Some model providers
   may require a token only for the one-time download step, not for normal local
   processing once files are cached.
@@ -118,10 +122,12 @@ You can also use the CLI directly after setup:
 ```powershell
 .venv\Scripts\ate.exe doctor
 .venv\Scripts\ate.exe analyze sample-media\episode.mkv --project work\episode.ateproj.json
-.venv\Scripts\ate.exe export work\episode.ateproj.json --output exports\episode-mixed.mkv --dry-run
+.venv\Scripts\ate.exe speakers work\episode.ateproj.json
+.venv\Scripts\ate.exe set-speaker work\episode.ateproj.json --speaker speaker-01 --name "Villain" --mute
+.venv\Scripts\ate.exe export work\episode.ateproj.json --output exports\episode-muted.mkv --dry-run
 ```
 
-Remove `--dry-run` to run the current remux export.
+Remove `--dry-run` to render the muted audio and remux export.
 
 ## Model Setup
 

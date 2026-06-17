@@ -6,6 +6,7 @@ from pathlib import Path
 from audio_track_editor.analysis import AnalyzeOptions, Analyzer
 from audio_track_editor.config import load_settings
 from audio_track_editor.doctor import format_checks, run_doctor
+from audio_track_editor.media import probe_media
 from audio_track_editor.preview import ensure_segment_preview
 from audio_track_editor.renderer import render_project
 from audio_track_editor.schemas import Project, load_project, save_project
@@ -76,6 +77,10 @@ if QtWidgets is not None:
             layout.addWidget(splitter, 1)
             self.status = QtWidgets.QStatusBar()
             self.setStatusBar(self.status)
+            self.progress = QtWidgets.QProgressBar()
+            self.progress.setMaximumWidth(170)
+            self.progress.setVisible(False)
+            self.status.addPermanentWidget(self.progress)
             self.setCentralWidget(central)
 
         def _tool_button(
@@ -90,6 +95,8 @@ if QtWidgets is not None:
         def _build_left_panel(self) -> QtWidgets.QWidget:
             panel = QtWidgets.QGroupBox("Streams")
             layout = QtWidgets.QVBoxLayout(panel)
+            self.audio_stream = QtWidgets.QComboBox()
+            layout.addWidget(self.audio_stream)
             self.streams = QtWidgets.QListWidget()
             self.streams.addItem("Import media to inspect streams")
             layout.addWidget(self.streams, 1)
@@ -136,9 +143,9 @@ if QtWidgets is not None:
         def _build_right_panel(self) -> QtWidgets.QWidget:
             panel = QtWidgets.QGroupBox("Profiles And Export")
             layout = QtWidgets.QVBoxLayout(panel)
-            self.speakers = QtWidgets.QTableWidget(0, 4)
+            self.speakers = QtWidgets.QTableWidget(0, 6)
             self.speakers.setHorizontalHeaderLabels(
-                ["Speaker", "Name", "Preferred Track", "Subtitles"]
+                ["Speaker", "Name", "Mute", "Time", "Segments", "Subtitles"]
             )
             self.speakers.horizontalHeader().setStretchLastSection(True)
             layout.addWidget(self.speakers, 1)
@@ -183,8 +190,28 @@ if QtWidgets is not None:
                 self.output_path.setText(str(output))
                 self.streams.clear()
                 self.streams.addItem(f"Selected: {Path(selected).name}")
-                self.streams.addItem("Click Analyze to inspect streams and create a project.")
+                self._probe_selected_media(Path(selected))
+                self.streams.addItem("Choose one audio track, then click Analyze.")
                 self.status.showMessage("Media selected")
+
+        def _probe_selected_media(self, media_path: Path) -> None:
+            self.audio_stream.clear()
+            try:
+                streams = probe_media(media_path, self.settings.ffprobe_bin)
+            except Exception as exc:  # pragma: no cover - GUI protection
+                self.streams.addItem(f"ffprobe failed: {exc}")
+                return
+
+            for stream in streams:
+                title = f" - {stream.title}" if stream.title else ""
+                lang = f" [{stream.language}]" if stream.language else ""
+                text = (
+                    f"#{stream.index} {stream.type} "
+                    f"{stream.codec_name or 'unknown'}{lang}{title}"
+                )
+                self.streams.addItem(text)
+                if stream.type == "audio":
+                    self.audio_stream.addItem(text, stream.index)
 
         def _show_doctor(self) -> None:
             self._refresh_status()
@@ -200,6 +227,16 @@ if QtWidgets is not None:
             self.doctor_summary.setPlainText(format_checks(checks))
             self.status.showMessage(f"Ready; {warnings} setup warning(s)")
 
+        def _set_busy(self, busy: bool, message: str) -> None:
+            if busy:
+                self.progress.setRange(0, 0)
+                self.progress.setVisible(True)
+            else:
+                self.progress.setVisible(False)
+                self.progress.setRange(0, 1)
+            self.status.showMessage(message)
+            QtWidgets.QApplication.processEvents()
+
         def _analyze_media(self) -> None:
             media_text = self.media_path.text().strip()
             project_text = self.project_path.text().strip()
@@ -213,12 +250,20 @@ if QtWidgets is not None:
                 self.project_path.setText(project_text)
 
             try:
+                self._set_busy(True, "Analyzing selected audio track...")
+                base_stream = self.audio_stream.currentData()
                 project = Analyzer(self.settings).analyze(
-                    AnalyzeOptions(media_path=Path(media_text), project_path=Path(project_text))
+                    AnalyzeOptions(
+                        media_path=Path(media_text),
+                        project_path=Path(project_text),
+                        base_audio_stream=int(base_stream) if base_stream is not None else None,
+                    )
                 )
             except Exception as exc:  # pragma: no cover - GUI protection
                 QtWidgets.QMessageBox.critical(self, "Analyze failed", str(exc))
                 return
+            finally:
+                self._set_busy(False, "Analyze finished")
 
             self.current_project = project
             self.current_project_path = Path(project_text)
@@ -247,22 +292,39 @@ if QtWidgets is not None:
                 speaker.speaker_id: speaker.label or speaker.speaker_id
                 for speaker in project.speakers
             }
+            speaker_segments = {
+                speaker.speaker_id: [
+                    segment
+                    for segment in project.segments
+                    if segment.speaker_id == speaker.speaker_id
+                ]
+                for speaker in project.speakers
+            }
             self.speakers.setRowCount(len(project.speakers))
             for row, speaker in enumerate(project.speakers):
+                segments = speaker_segments.get(speaker.speaker_id, [])
+                total = sum(segment.duration for segment in segments)
                 values = [
                     speaker.speaker_id,
                     speaker.label or speaker.speaker_id,
-                    (
-                        ""
-                        if speaker.preferred_audio_stream is None
-                        else str(speaker.preferred_audio_stream)
-                    ),
+                    "yes" if speaker.muted else "no",
+                    f"{total:.1f}s",
+                    str(len(segments)),
                     speaker.subtitles,
                 ]
                 for column, value in enumerate(values):
                     item = QtWidgets.QTableWidgetItem(value)
                     if column == 0:
                         item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+                    if column in {3, 4}:
+                        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+                    if column == 2:
+                        item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable)
+                        item.setCheckState(
+                            QtCore.Qt.CheckState.Checked
+                            if speaker.muted
+                            else QtCore.Qt.CheckState.Unchecked
+                        )
                     self.speakers.setItem(row, column, item)
 
             self.timeline.setRowCount(len(project.segments))
@@ -292,6 +354,7 @@ if QtWidgets is not None:
                 self.output_path.setText(output_text)
 
             try:
+                self._set_busy(True, "Rendering muted audio/export...")
                 if self.current_project_path != Path(project_text):
                     self.current_project = load_project(Path(project_text))
                     self.current_project_path = Path(project_text)
@@ -304,6 +367,8 @@ if QtWidgets is not None:
             except Exception as exc:  # pragma: no cover - GUI protection
                 QtWidgets.QMessageBox.critical(self, "Export failed", str(exc))
                 return
+            finally:
+                self._set_busy(False, "Export finished")
 
             mode = "Dry run planned" if self.dry_run.isChecked() else "Export complete"
             self.status.showMessage(f"{mode}: {result.output_file}")
@@ -312,6 +377,8 @@ if QtWidgets is not None:
                 mode,
                 (
                     f"{mode}\n\nSubtitle track:\n{result.subtitle_file}"
+                    f"\n\nMuted audio:\n{result.muted_audio_file}"
+                    f"\n\nMuted regions: {len(result.muted_regions)}"
                     f"\n\nOutput:\n{result.output_file}"
                 ),
             )
@@ -368,26 +435,20 @@ if QtWidgets is not None:
                 QtWidgets.QMessageBox.warning(self, "No project", "Analyze media first.")
                 return
 
-            stream_by_speaker: dict[str, int | None] = {}
             for row, speaker in enumerate(self.current_project.speakers):
                 name_item = self.speakers.item(row, 1)
-                track_item = self.speakers.item(row, 2)
-                subtitles_item = self.speakers.item(row, 3)
+                mute_item = self.speakers.item(row, 2)
+                subtitles_item = self.speakers.item(row, 5)
 
                 speaker.label = name_item.text().strip() if name_item else speaker.speaker_id
-                track_text = track_item.text().strip() if track_item else ""
-                speaker.preferred_audio_stream = int(track_text) if track_text.isdigit() else None
+                speaker.muted = (
+                    mute_item.checkState() == QtCore.Qt.CheckState.Checked if mute_item else False
+                )
                 speaker.subtitles = subtitles_item.text().strip() if subtitles_item else "auto"
-                stream_by_speaker[speaker.speaker_id] = speaker.preferred_audio_stream
-
-            for segment in self.current_project.segments:
-                preferred = stream_by_speaker.get(segment.speaker_id)
-                if preferred is not None:
-                    segment.target_audio_stream = preferred
 
             save_project(self.current_project, self.current_project_path)
             self._load_project(self.current_project)
-            self.status.showMessage("Speaker names and preferred tracks saved")
+            self.status.showMessage("Speaker names and mute choices saved")
 
 
 def main(argv: list[str] | None = None) -> int:

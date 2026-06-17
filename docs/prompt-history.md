@@ -122,3 +122,23 @@ User shared the full launch warning from pyannote: torchcodec could not load
 confirmed the waveform-mode fix is the right approach. Also patched doctor to
 check installed package metadata instead of importing `pyannote.audio` during
 GUI startup, so launch should not print that warning just from status checks.
+
+## 2026-06-16: Handoff-Driven MVP Pivot
+
+User provided a Word handoff document describing a better first build: process
+each language/audio track independently, detect recurring speakers, let the user
+preview/name speakers, globally mute selected speakers, and export a modified
+audio/video file. The handoff explicitly says not to cross-reference voices
+between languages and to start with timeline-based muting rather than true
+voice-only suppression.
+
+Changes:
+
+- Added `muted` speaker state and render settings to project JSON.
+- Added timeline-based mute region collection with pre/post padding, merge gap,
+  fade down/up, and WAV rendering.
+- Export now creates muted audio and can remux original video with that modified
+  audio.
+- GUI now includes audio track selection, speaker mute toggles, status/progress
+  indication, and export reporting for muted regions.
+- Added CLI helpers: `ate speakers` and `ate set-speaker`.

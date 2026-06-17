@@ -110,6 +110,61 @@ def build_extract_segment_command(
     ]
 
 
+def build_extract_render_audio_command(
+    media_path: Path,
+    stream_index: int,
+    output_wav: Path,
+    ffmpeg_bin: str = "ffmpeg",
+) -> list[str]:
+    return [
+        ffmpeg_bin,
+        "-y",
+        "-i",
+        str(media_path),
+        "-map",
+        f"0:{stream_index}",
+        "-vn",
+        "-ac",
+        "2",
+        "-ar",
+        "48000",
+        "-sample_fmt",
+        "s16",
+        str(output_wav),
+    ]
+
+
+def build_remux_with_modified_audio_command(
+    media_path: Path,
+    modified_audio: Path,
+    output_mkv: Path,
+    ffmpeg_bin: str = "ffmpeg",
+) -> list[str]:
+    return [
+        ffmpeg_bin,
+        "-y",
+        "-i",
+        str(media_path),
+        "-i",
+        str(modified_audio),
+        "-map",
+        "0:v:0?",
+        "-map",
+        "1:a:0",
+        "-map",
+        "0:s?",
+        "-c:v",
+        "copy",
+        "-c:a",
+        "aac",
+        "-c:s",
+        "copy",
+        "-metadata:s:a:0",
+        "title=Audio Track Editor Muted Mix",
+        str(output_mkv),
+    ]
+
+
 def build_passthrough_export_command(
     media_path: Path,
     subtitle_file: Path,

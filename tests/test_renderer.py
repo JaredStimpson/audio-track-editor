@@ -2,7 +2,7 @@ from pathlib import Path
 
 from audio_track_editor.config import Settings
 from audio_track_editor.renderer import render_project
-from audio_track_editor.schemas import Project, Segment, save_project
+from audio_track_editor.schemas import Project, Segment, SpeakerProfile, save_project
 
 
 def test_render_project_dry_run_writes_fallback_subtitles(tmp_path: Path) -> None:
@@ -11,6 +11,7 @@ def test_render_project_dry_run_writes_fallback_subtitles(tmp_path: Path) -> Non
     project = Project(
         media_path=str(tmp_path / "source.mkv"),
         base_audio_stream=1,
+        speakers=[SpeakerProfile("speaker-00", muted=True)],
         segments=[
             Segment(
                 segment_id="s1",
@@ -42,5 +43,7 @@ def test_render_project_dry_run_writes_fallback_subtitles(tmp_path: Path) -> Non
     result = render_project(project_path, output_path, settings, dry_run=True)
 
     assert result.output_file == output_path
+    assert result.muted_audio_file == output_path.with_suffix(".muted.wav")
+    assert len(result.muted_regions) == 1
     assert result.subtitle_file.read_text(encoding="utf-8").strip().endswith("hello")
     assert result.command[-1] == str(output_path)

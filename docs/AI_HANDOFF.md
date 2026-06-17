@@ -9,18 +9,21 @@ latest relevant files from the ignored `logs/` folder, especially `setup-*.log`,
 - Repo: `JaredStimpson/audio-track-editor`
 - Current implementation branch for this phase: `test`
 - App type: Windows-first Python/PySide6 desktop app
-- Goal: local/offline-first per-speaker language track editor for multi-audio
-  MKV/MP4 files
+- Goal: local/offline-first per-track speaker diarization and timeline muting
+  for multi-audio MKV/MP4/MOV files
 - Current version: functional scaffold with GUI analyze/export, FFmpeg
-  metadata/remux path, pyannote diarization adapter, generated fallback
-  subtitles, setup scripts, and tests
+  metadata/remux path, pyannote diarization adapter, speaker mute renderer,
+  generated fallback subtitles, setup scripts, and tests
 
 ## Product Intent
 
-The app should let a user load a multi-language video, identify speakers, label
-characters, choose which language track each character should use, and export a
-new MKV with copied video, mixed audio, and soft subtitles for uncertain
-segments.
+The app should let a user load a multi-language video, choose one audio track,
+identify recurring speakers inside that track, preview/name speakers, mute one
+or more speakers globally, and export modified audio or a remuxed video.
+
+Important product shift from the handoff doc: do not cross-reference speakers
+between languages. English speakers and Japanese speakers are independent
+speaker sets. The user chooses which voices to mute or keep per analyzed track.
 
 The design is local-first. Internet should not be needed for normal processing
 after dependencies/models are installed or cached.
@@ -77,8 +80,12 @@ Remove failed Asteroid partial installs:
 - `ate analyze <media> --project <file>`: probes streams and writes a project
   with pyannote speaker segments when the model is available, otherwise a clear
   fallback segment explaining what blocked detection.
-- `ate export <project> --output <file.mkv>`: writes fallback SRT and remuxes
-  video/base audio/subtitles.
+- `ate speakers <project>`: lists speaker labels, mute state, duration, and
+  segment counts.
+- `ate set-speaker <project> --speaker <id> --name <label> --mute|--unmute`:
+  updates project speaker choices.
+- `ate export <project> --output <file.wav|file.mkv>`: renders timeline-muted
+  audio and optionally remuxes original video with the modified audio.
 - GUI: browse media, analyze, inspect streams/timeline, play detected sections,
   name speakers, assign preferred tracks, export MKV.
 - `scripts/run-first-test.ps1`: generates synthetic multi-audio MKV and runs
@@ -89,8 +96,8 @@ Remove failed Asteroid partial installs:
 ## Known Gaps
 
 - Speech separation is not wired yet.
-- Export does not yet synthesize a true mixed dialogue stem; it remuxes the
-  selected base audio plus generated subtitles.
+- Timeline muting mutes the whole audio range for selected speakers, so
+  background music/SFX and overlaps can be affected.
 - GUI is functional but still a scaffold, not a full timeline editor.
 
 ## Logs
